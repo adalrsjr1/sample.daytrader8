@@ -69,6 +69,12 @@
                   <version>10.13.1.1</version>
                   <outputDirectory>${project.build.directory}/liberty/wlp/usr/shared/resources/DerbyLibs</outputDirectory>
                 </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.derby</groupId>
+                  <artifactId>derbyclient</artifactId>
+                  <version>10.13.1.1</version>
+                  <outputDirectory>${project.build.directory}/liberty/wlp/usr/shared/resources/DerbyLibsRemote</outputDirectory>
+                </artifactItem>
               </artifactItems>
             </configuration>
           </execution>
@@ -126,6 +132,9 @@
             <default.http.port>${testServerHttpPort}</default.http.port>
             <default.https.port>${testServerHttpsPort}</default.https.port>
           </bootstrapProperties>
+          <jvmOptions>
+            <param>-Duser.timezone=GMT</param>
+          </jvmOptions>
         </configuration>
       </plugin>
     </plugins>
