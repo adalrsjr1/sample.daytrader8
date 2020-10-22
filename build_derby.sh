@@ -1,3 +1,4 @@
 #!/bin/bash
 
-docker build -f Dockerfile-Derby -t derby .
+docker build -f Dockerfile-Derby -t smarttuning/derby .
+docker push smarttuning/derby

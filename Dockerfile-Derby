@@ -1,4 +1,4 @@
-FROM openjdk:11-jre-slim  
+FROM adoptopenjdk/openjdk11-openj9
 
 ENV DERBY_VERSION=10.15.2.0
 ENV DERBY_HOME=/derby
@@ -6,7 +6,7 @@ ENV DERBY_LIB=${DERBY_HOME}/lib
 ENV CLASSPATH=${DERBY_LIB}/derby.jar:${DERBY_LIB}/derbynet.jar:${DERBY_LIB}/derbytools.jar:${DERBY_LIB}/derbyoptionaltools.jar:${DERBY_LIB}/derbyclient.jar
 
 RUN \
-    apt-get update && apt-get install -y wget netcat && \
+    apt-get update && apt-get install -y wget net-tools netcat watch && \
     wget https://dist.apache.org/repos/dist/release/db/derby/db-derby-${DERBY_VERSION}/db-derby-${DERBY_VERSION}-bin.tar.gz && \
     tar xzf /db-derby-${DERBY_VERSION}-bin.tar.gz && \
     mv /db-derby-${DERBY_VERSION}-bin /derby && \
@@ -22,4 +22,4 @@ EXPOSE 1527
 
 HEALTHCHECK CMD nc -z localhost 1527 || exit 1
 
-CMD ["java", "-Dderby.stream.error.field=java.lang.System.out", "org.apache.derby.drda.NetworkServerControl", "start", "-h", "0.0.0.0"]
+CMD ["java", "-Xtune:virtualized", "-XX:+UseContainerSupport", "-Dderby.stream.error.field=java.lang.System.out", "org.apache.derby.drda.NetworkServerControl", "start", "-h", "0.0.0.0"]

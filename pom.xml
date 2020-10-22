@@ -97,8 +97,8 @@
                   <directory>resources/data</directory>
                   <filtering>false</filtering>
                 </resource>
-              </resources>              
-            </configuration>            
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>
