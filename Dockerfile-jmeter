@@ -1,0 +1,26 @@
+# Dockerfile to build a jmeter container able to drive acmeair
+# Results appear on /output in the container
+# Must specify the hostname for the acmeair application (or localhost will be assumed)
+FROM smarttuning/jmeter_plain
+
+# Copy the script to be executed and other needed files
+COPY jmeter_files/daytrader8.jmx $JMETER_HOME/
+COPY jmeter_files/init.sh $JMETER_HOME/bin/init.sh
+
+RUN chmod a+x $JMETER_HOME/bin/init.sh
+
+# Environment variables that we want the user to redefine
+ENV JTOPUID=499 \
+    JHOST=localhost \
+    JPORT=9080 \
+    JTHREADS=10 \
+    JRAMP=0 \
+    JMAXTHINKTIME=200\
+    JSTOCKS=999\
+    JDURATION=60
+
+EXPOSE 9270
+
+ENTRYPOINT ["/bin/bash",  "-c", "init.sh"]
+
+

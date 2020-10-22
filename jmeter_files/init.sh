@@ -1,0 +1,14 @@
+#!/bin/bash
+
+jmeter -n \
+  -DusePureIDs=true \
+  -t $JMETER_HOME/daytrader8.jmx \
+  -JTOPUID=$JTOPUID \
+  -JHOST=$JHOST \
+  -JPORT=$JPORT \
+  -JTHREADS=$JTHREADS \
+  -JRAMP=$JRAMP \
+  -JMAXTHINKTIME=$JMAXTHINKTIME \
+  -JSTOCKS=$JSTOCKS \
+  -JDURATION=$JDURATION
+

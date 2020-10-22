@@ -1,0 +1,42 @@
+FROM ibmcom/db2:11.5.4.0
+
+RUN mkdir /var/custom && \
+    touch /var/custom/setup.sh && \
+    printf '\
+    #!/bin/bash \
+    \nsu - db2inst1 -c "db2 create db tradedb" \
+    \n#su - db2inst1 -c "db2set DB2_LOGGER_NON_BUFFERED_IO=OFF" \
+    \n#su - db2inst1 -c "db2set DB2_DIRECT_IO=OFF" \
+    \nsu - db2inst1 -c "db2set DB2_DEFERRED_PREPARE_SEMANTICS=YES" \
+    \nsu - db2inst1 -c "db2set DB2_COMPATIBILITY_VECTOR=ORA" \
+    \nsu - db2inst1 -c "db2set DB2_APM_PERFORMANCE=ON" \
+    \nsu - db2inst1 -c "db2set DB2_KEEPTABLELOCK=CONNECTION" \
+    \nsu - db2inst1 -c "db2set DB2_USE_ALTERNATE_PAGE_CLEANING=ON" \
+    \nsu - db2inst1 -c "db2set DB2_MINIMIZE_LISTPREFETCH=YES" \
+    \nsu - db2inst1 -c "db2stop force" \
+    \nsu - db2inst1 -c "db2start" \
+    \nsu - db2inst1 -c "db2 update dbm cfg using notifylevel 0" \
+    \nsu - db2inst1 -c "db2 update dbm cfg using diaglevel 1" \
+    \nsu - db2inst1 -c "db2 update dbm cfg using NUM_POOLAGENTS 500 automatic MAX_COORDAGENTS 500 automatic MAX_CONNECTIONS 500 automatic" \
+    \nsu - db2inst1 -c "db2 -v update db cfg for tradedb using MAXLOCKS 100 LOCKLIST 100000" \
+    \nsu - db2inst1 -c "db2 connect to tradedb ; \
+    db2 update db cfg for tradedb using maxappls 500 automatic ; \
+    db2 update db cfg for tradedb using logfilsiz 8000 ; \
+    db2 update db cfg for tradedb using logprimary 32 ; \
+    db2 update db cfg for tradedb using dft_queryopt 0 ; \
+    db2 update db cfg for tradedb using softmax 3000 ; \
+    db2 update db cfg for tradedb using chngpgs_thresh 99 ; \
+    db2 -v alter bufferpool IBMDEFAULTBP size -1 ; \
+    db2 -v connect reset ; \
+    db2 -v update db cfg for tradedb using BUFFPAGE 262144" \
+    \nsu - db2inst1 -c "db2 terminate" \
+    \nsu - db2inst1 -c "db2stop force" \
+    \nsu - db2inst1 -c "db2start" \
+    \nsu - db2inst1 -c "db2 connect to tradedb ; \
+    db2 reorgchk update statistics ;\
+    db2 connect reset" \
+    \nsu - db2inst1 -c "db2 terminate" \
+    \nsu - db2inst1 -c "db2stop force" \
+    \nsu - db2inst1 -c "db2start" \
+    ' > /var/custom/setup.sh && \
+    chmod a+x /var/custom/setup.sh
