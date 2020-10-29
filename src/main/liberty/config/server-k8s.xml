@@ -24,7 +24,7 @@
   <httpEndpoint host="*" httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint">
       <!--<tcpOptions soReuseAddr="true"/>-->
     <httpOptions
-          persistTimeout="${HTTP_WRITE_TIMEOUT}"
+          persistTimeout="${HTTP_PERSIST_TIMEOUT}"
           maxKeepAliveRequests="${HTTP_MAX_KEEP_ALIVE_REQUESTS}"/>
     <!-- https://openliberty.io/blog/2018/12/20/http-forwarded-header.html -->
     <remoteIp proxies="" useRemoteIpInAccessLog="false"/>
