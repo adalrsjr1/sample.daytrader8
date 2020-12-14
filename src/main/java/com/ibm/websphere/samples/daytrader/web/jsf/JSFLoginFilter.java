@@ -68,7 +68,7 @@ public class JSFLoginFilter implements Filter {
 
             if (url.contains("home") || url.contains("account") || url.contains("portfolio") || url.contains("quote") || url.contains("order")
                     || url.contains("marketSummary")) {
-                System.out.println("JSF service error: User Not Logged in");
+                System.out.println("JSF service error: User{" + userID + "} Not Logged in -- URL: " + url);
                 response.sendRedirect("welcome.faces");
                 return;
             }

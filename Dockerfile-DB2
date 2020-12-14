@@ -1,9 +1,13 @@
 FROM ibmcom/db2:11.5.4.0
 
 RUN mkdir /var/custom && \
-    touch /var/custom/setup.sh && \
+    touch /var/custom/01-setup.sh && \
     printf '\
     #!/bin/bash \
+    \nif compgen -G "/database/backup/tradedb/TRADEDB*" > /dev/null; then \
+    \n  echo "loading backup from /database/backup/tradedb/" \
+    \n  exit 0 \
+    \nfi \
     \nsu - db2inst1 -c "db2 create db tradedb" \
     \n#su - db2inst1 -c "db2set DB2_LOGGER_NON_BUFFERED_IO=OFF" \
     \n#su - db2inst1 -c "db2set DB2_DIRECT_IO=OFF" \
@@ -38,5 +42,18 @@ RUN mkdir /var/custom && \
     \nsu - db2inst1 -c "db2 terminate" \
     \nsu - db2inst1 -c "db2stop force" \
     \nsu - db2inst1 -c "db2start" \
-    ' > /var/custom/setup.sh && \
-    chmod a+x /var/custom/setup.sh
+    ' > /var/custom/01-setup.sh && \
+    chmod a+x /var/custom/01-setup.sh
+
+RUN touch /var/custom/02-restore.sh && \
+    printf '\
+    #!/bin/bash \
+    \nif compgen -G "/database/backup/tradedb/TRADEDB*" > /dev/null; then \
+    \n  su - db2inst1 -c "db2stop force" \
+    \n  su - db2inst1 -c "db2start" \
+    \n  echo "restoring tradedb" \
+    \n  su - db2inst1 -c "db2 restore db tradedb from /database/backup/tradedb replace existing" \
+    \n  echo "tradedb restored" \
+    \nfi \
+    ' > /var/custom/02-restore.sh && \
+    chmod a+x /var/custom/02-restore.sh

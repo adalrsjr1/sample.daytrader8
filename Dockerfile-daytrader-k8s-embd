@@ -8,8 +8,7 @@ RUN apt-get update && \
 COPY --chown=1001:0 liveness_probe.sh /opt/liveness_probe.sh
 COPY --chown=1001:0 readness_probe.sh /opt/readness_probe.sh
 RUN chmod a+x /opt/*.sh
-#COPY --chown=1001:0 src/main/liberty/config/server-k8s.xml /config/server.xml
-COPY --chown=1001:0 src/main/liberty/config/server_db2.xml /config/server.xml
+COPY --chown=1001:0 src/main/liberty/config/server-embd.xml /config/server.xml
 COPY --chown=1001:0 src/main/liberty/config/jvm.options /config/jvm.options
 COPY --chown=1001:0 target/io.openliberty.sample.daytrader8.war /config/apps
 COPY --chown=1001:0 target/liberty/wlp/usr/shared/resources /opt/ol/wlp/usr/shared/resources

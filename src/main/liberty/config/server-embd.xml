@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <server>
   <featureManager>
-    <feature>mpHealth-2.1</feature>
     <feature>ejb-3.2</feature>
     <feature>servlet-4.0</feature>
     <feature>jsf-2.3</feature>
@@ -17,24 +16,45 @@
     <feature>beanValidation-2.0</feature>
     <feature>jaxrs-2.1</feature>
     <feature>ssl-1.0</feature>
+    <feature>mpMetrics-2.0</feature>
+    <feature>monitor-1.0</feature>
+    <feature>requestTiming-1.0</feature>
   </featureManager>
+
+  <mpMetrics authentication="false"/>
+
+  <requestTiming
+          slowRequestThreshold="${TRACE_SLOW_REQUEST_THRESHOLD}"
+          hungRequestThreshold="${TRACE_HUNG_REQUEST_THRESHOLD}"
+          sampleRate="1"
+  />
+
+  <basicRegistry></basicRegistry>
+
   <keyStore id="defaultKeyStore" password="yourPassword"/>
   <!--<logging traceSpecification="daytrader=fine"/>-->
   <!-- allow reuse of 'busy' ports for fast server recycling on linux (where ports remain blocked for up to 2 mins after server stops) ${tradelite.http.port} set in bootstrap.properties -->
   <httpEndpoint host="*" httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint">
-      <!--<tcpOptions soReuseAddr="true"/>-->
     <httpOptions
-          persistTimeout="${HTTP_PERSIST_TIMEOUT}"
-          maxKeepAliveRequests="${HTTP_MAX_KEEP_ALIVE_REQUESTS}"/>
+            persistTimeout="${HTTP_PERSIST_TIMEOUT}"
+            maxKeepAliveRequests="${HTTP_MAX_KEEP_ALIVE_REQUESTS}"/>
     <!-- https://openliberty.io/blog/2018/12/20/http-forwarded-header.html -->
     <remoteIp proxies="" useRemoteIpInAccessLog="false"/>
   </httpEndpoint>
+
   <webApplication id="daytrader8" location="io.openliberty.sample.daytrader8.war" name="daytrader8" context-root="daytrader"/>
+  <connectionManager agedTimeout="${CONMGR1_AGED_TIMEOUT}"
+                     connectionTimeout="${CONMGR1_TIMEOUT}"
+                     id="conMgr1"
+                     maxIdleTime="${CONMGR1_MAX_IDLE_TIMEOUT}"
+                     maxPoolSize="${CONMGR1_MAX_POOL_SIZE}"
+                     minPoolSize="${CONMGR1_MIN_POOL_SIZE}"
+                     purgePolicy="${CONMGR1_PURGE_POLICY}"
+                     numConnectionsPerThreadLocal="${CONMGR1_CONN_PER_THREAD}"
+                     reapTime="${CONMGR1_REAP_TIME}"/>
 
   <jdbcDriver id="DerbyEmbedded" libraryRef="DerbyLib"/>
-  <jdbcDriver id="DerbyRemote" libraryRef="DerbyLibRemote"/>
   <library filesetRef="DerbyFileset" id="DerbyLib"/>
-  <library filesetRef="DerbyFilesetRemote" id="DerbyLibRemote"/>
   <fileset dir="${shared.resource.dir}/DerbyLibs" id="DerbyFileset" includes="derby-10.13.1.1.jar"/>
   <fileset dir="${shared.resource.dir}/DerbyLibsRemote" id="DerbyFilesetRemote" includes="derbyclient-10.13.1.1.jar"/>
   <authData id="TradeDataSourceAuthData" password="db_password" user="db_username"/>
@@ -45,45 +65,43 @@
               jdbcDriverRef="DerbyRemote"
               jndiName="jdbc/TradeDataSource"
               statementCacheSize="60">
-
-    <connectionManager agedTimeout="-1"
-                       connectionTimeout="${CONMGR1_TIMEOUT}"
-                       id="conMgr1"
-                       maxIdleTime="-1"
-                       maxPoolSize="${CONMGR1_MAX_POOL_SIZE}"
-                       purgePolicy="${CONMGR1_PURGE_POLICY}"
-                       numConnectionsPerThreadLocal="${CONMGR1_CONN_PER_THREAD}"
-                       reapTime="-1"/>
-
-    <properties.derby.client createDatabase="create"
-                             databaseName="/data/tradedb"
-                             serverName="${DB_ADDRESS}"
-                             portNumber="${DB_PORT}"
-                             user="db_username"
-                             password="db_password"/>
-    <!--<properties.derby.embedded createDatabase="create" databaseName="${shared.resource.dir}/data/tradedb" password="db_password" user="db_username"/>-->
+<!--    <properties.derby.client createDatabase="create" databaseName="/data/tradedb" serverName="${DB_ADDRESS}" portNumber="${DB_PORT}" user="db_username" password="db_password"/>-->
+    <properties.derby.embedded createDatabase="create"
+                               databaseName="${shared.resource.dir}/data/tradedb"
+                               password="db_password"
+                               user="db_username"/>
   </dataSource>
 
   <messagingEngine id="defaultME">
     <queue id="TradeBrokerQueue"/>
     <topicSpace id="TradeTopicSpace"/>
   </messagingEngine>
+
   <jmsQueueConnectionFactory connectionManagerRef="ConMgr3" jndiName="jms/TradeBrokerQCF">
     <properties.wasJms/>
   </jmsQueueConnectionFactory>
   <connectionManager id="ConMgr3"
+                     agedTimeout="${CONMGR3_AGED_TIMEOUT}"
+                     connectionTimeout="${CONMGR3_TIMEOUT}"
+                     maxIdleTime="${CONMGR3_MAX_IDLE_TIMEOUT}"
                      maxPoolSize="${CONMGR3_MAX_POOL_SIZE}"
+                     minPoolSize="${CONMGR3_MIN_POOL_SIZE}"
                      purgePolicy="${CONMGR3_PURGE_POLICY}"
                      numConnectionsPerThreadLocal="${CONMGR3_CONN_PER_THREAD}"
-  />
+                     reapTime="${CONMGR3_REAP_TIME}"/>
+
   <jmsTopicConnectionFactory connectionManagerRef="ConMgr4" jndiName="jms/TradeStreamerTCF">
     <properties.wasJms/>
   </jmsTopicConnectionFactory>
   <connectionManager id="ConMgr4"
+                     agedTimeout="${CONMGR4_AGED_TIMEOUT}"
+                     connectionTimeout="${CONMGR4_TIMEOUT}"
+                     maxIdleTime="${CONMGR4_MAX_IDLE_TIMEOUT}"
                      maxPoolSize="${CONMGR4_MAX_POOL_SIZE}"
+                     minPoolSize="${CONMGR4_MIN_POOL_SIZE}"
                      purgePolicy="${CONMGR4_PURGE_POLICY}"
                      numConnectionsPerThreadLocal="${CONMGR4_CONN_PER_THREAD}"
-  />
+                     reapTime="${CONMGR4_REAP_TIME}"/>
 
   <jmsQueue id="TradeBrokerQueue" jndiName="jms/TradeBrokerQueue">
     <properties.wasJms deliveryMode="NonPersistent" queueName="TradeBrokerQueue"/>
@@ -106,5 +124,4 @@
           keepAlive="60s"
           stealPolicy="LOCAL"
           rejectedWorkPolicy="CALLER_RUNS"/>
-
 </server>
