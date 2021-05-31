@@ -15,22 +15,24 @@
         <feature>beanValidation-2.0</feature>
         <feature>jaxrs-2.1</feature>
         <feature>ssl-1.0</feature>
-		<feature>mpMetrics-2.0</feature>
-		<feature>monitor-1.0</feature>
-		<feature>requestTiming-1.0</feature>
+        <feature>mpMetrics-2.0</feature>
+        <feature>mpHealth-2.0</feature>
+        <feature>monitor-1.0</feature>
+        <feature>requestTiming-1.0</feature>
     </featureManager>
 
 	<mpMetrics authentication="false"/>
 
-	<requestTiming
+  <!--<requestTiming
 			slowRequestThreshold="${TRACE_SLOW_REQUEST_THRESHOLD}"
 			hungRequestThreshold="${TRACE_HUNG_REQUEST_THRESHOLD}"
 			sampleRate="1"
-	/>
+  />-->
 
 	<basicRegistry></basicRegistry>
 
-	<!--<logging traceSpecification="daytrader=fine"/>-->
+    <!--<logging traceSpecification="daytrader=fine"/>-->
+      <!--<logging traceSpecification="com.ibm.ws.threading.internal.ThreadPoolController=all=enabled" maxFileSize="1025" maxFiles="10" />-->
 	<!-- allow reuse of 'busy' ports for fast server recycling on linux (where ports remain blocked for up to 2 mins after server stops) ${tradelite.http.port} set in bootstrap.properties -->
 	<httpEndpoint host="*" httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint">
 		<httpOptions
@@ -39,6 +41,10 @@
 		<!-- https://openliberty.io/blog/2018/12/20/http-forwarded-header.html -->
 		<remoteIp proxies="" useRemoteIpInAccessLog="false"/>
 	</httpEndpoint>
+
+	<!-- reuse idsession for multiple replicas -->
+	<httpSession idReuse="true" />
+
 
 	<webApplication id="daytrader8" location="io.openliberty.sample.daytrader8.war" name="daytrader8" context-root="daytrader"/>
 
