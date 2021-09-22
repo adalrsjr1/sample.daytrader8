@@ -33,8 +33,9 @@
 
     <!--<logging traceSpecification="daytrader=fine"/>-->
       <!--<logging traceSpecification="com.ibm.ws.threading.internal.ThreadPoolController=all=enabled" maxFileSize="1025" maxFiles="10" />-->
-	<!-- allow reuse of 'busy' ports for fast server recycling on linux (where ports remain blocked for up to 2 mins after server stops) ${tradelite.http.port} set in bootstrap.properties -->
-	<httpEndpoint host="*" httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint">
+      <!-- allow reuse of 'busy' ports for fast server recycling on linux (where ports remain blocked for up to 2 mins after server stops) ${tradelite.http.port} set in bootstrap.properties -->
+  <httpAccessLogging id="accessLogging" logFormat='%h %u %{t}W "%r" %s %D %b'/>
+	<httpEndpoint host="*" httpPort="9080" httpsPort="9443" id="defaultHttpEndpoint" accessLoggingRef="accessLogging">
 		<httpOptions
 				persistTimeout="${HTTP_PERSIST_TIMEOUT}"
 				maxKeepAliveRequests="${HTTP_MAX_KEEP_ALIVE_REQUESTS}"/>
@@ -43,7 +44,7 @@
 	</httpEndpoint>
 
 	<!-- reuse idsession for multiple replicas -->
-	<httpSession idReuse="true" />
+	<httpSession idReuse="true" modifyActiveCountOnInvalidatedSession="false"/>
 
 
 	<webApplication id="daytrader8" location="io.openliberty.sample.daytrader8.war" name="daytrader8" context-root="daytrader"/>

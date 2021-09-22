@@ -4,7 +4,7 @@
 FROM smarttuning/jmeter_plain
 
 # Copy the script to be executed and other needed files
-COPY jmeter_files/daytrader8.jmx $JMETER_HOME/
+COPY jmeter_files/. $JMETER_HOME/
 COPY jmeter_files/init.sh $JMETER_HOME/bin/init.sh
 
 RUN chmod a+x $JMETER_HOME/bin/init.sh
@@ -14,13 +14,15 @@ ENV JTOPUID=499 \
     JHOST=localhost \
     JPORT=9080 \
     JTHREADS=10 \
+    JRATIO=1 \
     JRAMP=0 \
     JMAXTHINKTIME=200\
     JSTOCKS=999\
     JDURATION=60 \
     JQUOTES=45 \
     JBUYS=4 \
-    JSELLS=4
+    JSELLS=4 \
+    JWAIT_RESP=1000 
 
 EXPOSE 9270
 
