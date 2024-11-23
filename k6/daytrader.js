@@ -14,10 +14,10 @@ import { URL } from 'https://jslib.k6.io/url/1.0.0/index.js';
 
 export const options = {
   // A number specifying the number of VUs to run concurrently.
-  vus: 1,
+  vus: 500,
   // A string specifying the total duration of the test run.
-  duration: '60s',
-  // iterations: 500,
+  // duration: '60s',
+  iterations: 500,
 
   // The following section contains configuration options for execution of this
   // test script in Grafana Cloud.
