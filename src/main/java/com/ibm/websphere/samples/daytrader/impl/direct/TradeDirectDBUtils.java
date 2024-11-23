@@ -216,6 +216,7 @@ public class TradeDirectDBUtils implements TradeDB {
     boolean success = false;
     try {
       conn = datasource.getConnection();
+      conn.setAutoCommit(false);
       Statement stmt = conn.createStatement();
       int bufferLength = sqlBuffer.length;
       for (int i = 0; i < bufferLength; i++) {

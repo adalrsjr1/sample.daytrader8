@@ -1,0 +1,24 @@
+FROM maven:3.9-eclipse-temurin-21-jammy AS builder
+
+RUN mkdir -p /usr/app
+WORKDIR /usr/app
+
+COPY pom.xml .
+COPY src/ ./src
+
+RUN mvn clean package
+RUN ls -lha ./target/liberty/wlp/usr/shared/resources & sleep 10
+
+FROM open-liberty:full
+
+COPY --chown=1001:0 --from=builder /usr/app/src/main/liberty/config/server.xml /config/server.xml
+COPY --chown=1001:0 --from=builder /usr/app/src/main/liberty/config/bootstrap.properties /config/bootstrap.properties
+COPY --chown=1001:0 --from=builder /usr/app/target/io.openliberty.sample.daytrader8.war /config/apps/
+COPY --chown=1001:0 --from=builder /usr/app/target/liberty/wlp/usr/shared/resources/PostgresLibs/ /liberty/usr/shared/resources/PostgresLibs/
+
+ENV contextRoot=daytrader
+ENV POSTGRES_HOST=
+ENV POSTGRES_PORT=
+ENV MAX_QUOTES=1000
+ENV MAX_USERS=500
+RUN configure.sh
