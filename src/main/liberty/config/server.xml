@@ -39,17 +39,29 @@
       id="defaultHttpEndpoint"
    >
       <tcpOptions soReuseAddr="true" />
-      <httpOptions maxKeepAliveRequests="-1" />
+      <httpOptions
+				persistTimeout="${HTTP_PERSIST_TIMEOUT}"
+				maxKeepAliveRequests="${HTTP_MAX_KEEP_ALIVE_REQUESTS}"/>
+		<!-- https://openliberty.io/blog/2018/12/20/http-forwarded-header.html -->
+		<remoteIp proxies="" useRemoteIpInAccessLog="false"/>
    </httpEndpoint>
 
    <!-- <httpAccessLogging id="accessLogging" /> -->
 
-   <!-- <httpSession idReuse="true" modifyActiveCountOnInvalidatedSession="false" /> -->
+   <!-- reuse idsession for multiple replicas -->
+	<httpSession idReuse="true" modifyActiveCountOnInvalidatedSession="false"/>
 
    <application location="io.openliberty.sample.daytrader8.war" type="war" context-root="/daytrader" />
 
-   <connectionManager agedTimeout="-1" connectionTimeout="0" id="conMgr1" maxIdleTime="-1"
-      maxPoolSize="100" minPoolSize="100" purgePolicy="FailingConnectionOnly" reapTime="-1" />
+   <connectionManager agedTimeout="${CONMGR1_AGED_TIMEOUT}"
+					   connectionTimeout="${CONMGR1_TIMEOUT}"
+					   id="conMgr1"
+					   maxIdleTime="${CONMGR1_MAX_IDLE_TIMEOUT}"
+					   maxPoolSize="${CONMGR1_MAX_POOL_SIZE}"
+					   minPoolSize="${CONMGR1_MIN_POOL_SIZE}"
+					   purgePolicy="${CONMGR1_PURGE_POLICY}"
+					   numConnectionsPerThreadLocal="${CONMGR1_CONN_PER_THREAD}"
+					   reapTime="${CONMGR1_REAP_TIME}"/>
 
    <jdbcDriver id="postgresql-driver"
       javax.sql.XADataSource="org.postgresql.xa.PGXADataSource"
@@ -81,33 +93,55 @@
    </dataSource>
 
    <messagingEngine id="defaultME">
-      <queue id="TradeBrokerQueue" />
-      <topicSpace id="TradeTopicSpace" />
-   </messagingEngine>
+		<queue id="TradeBrokerQueue"/>
+		<topicSpace id="TradeTopicSpace"/>
+	</messagingEngine>
 
-   <connectionManager id="ConMgr2" maxPoolSize="20" />
-   <jmsQueueConnectionFactory connectionManagerRef="ConMgr2" jndiName="jms/TradeBrokerQCF">
-      <properties.wasJms />
-   </jmsQueueConnectionFactory>
+	<jmsQueueConnectionFactory connectionManagerRef="ConMgr3" jndiName="jms/TradeBrokerQCF">
+		<properties.wasJms/>
+	</jmsQueueConnectionFactory>
+	<connectionManager id="ConMgr3"
+					   agedTimeout="${CONMGR3_AGED_TIMEOUT}"
+					   connectionTimeout="${CONMGR3_TIMEOUT}"
+					   maxIdleTime="${CONMGR3_MAX_IDLE_TIMEOUT}"
+					   maxPoolSize="${CONMGR3_MAX_POOL_SIZE}"
+					   minPoolSize="${CONMGR3_MIN_POOL_SIZE}"
+					   purgePolicy="${CONMGR3_PURGE_POLICY}"
+					   numConnectionsPerThreadLocal="${CONMGR3_CONN_PER_THREAD}"
+					   reapTime="${CONMGR3_REAP_TIME}"/>
 
-   <connectionManager id="ConMgr3" maxPoolSize="20" />
-   <jmsTopicConnectionFactory connectionManagerRef="ConMgr3" jndiName="jms/TradeStreamerTCF">
-      <properties.wasJms />
-   </jmsTopicConnectionFactory>
+	<jmsTopicConnectionFactory connectionManagerRef="ConMgr4" jndiName="jms/TradeStreamerTCF">
+		<properties.wasJms/>
+	</jmsTopicConnectionFactory>
+	<connectionManager id="ConMgr4"
+					   agedTimeout="${CONMGR4_AGED_TIMEOUT}"
+					   connectionTimeout="${CONMGR4_TIMEOUT}"
+					   maxIdleTime="${CONMGR4_MAX_IDLE_TIMEOUT}"
+					   maxPoolSize="${CONMGR4_MAX_POOL_SIZE}"
+					   minPoolSize="${CONMGR4_MIN_POOL_SIZE}"
+					   purgePolicy="${CONMGR4_PURGE_POLICY}"
+					   numConnectionsPerThreadLocal="${CONMGR4_CONN_PER_THREAD}"
+					   reapTime="${CONMGR4_REAP_TIME}"/>
 
-   <jmsQueue id="TradeBrokerQueue" jndiName="jms/TradeBrokerQueue">
-      <properties.wasJms deliveryMode="NonPersistent" queueName="TradeBrokerQueue" />
-   </jmsQueue>
+	<jmsQueue id="TradeBrokerQueue" jndiName="jms/TradeBrokerQueue">
+		<properties.wasJms deliveryMode="NonPersistent" queueName="TradeBrokerQueue"/>
+	</jmsQueue>
+	<jmsTopic id="TradeStreamerTopic" jndiName="jms/TradeStreamerTopic">
+		<properties.wasJms deliveryMode="NonPersistent" topicSpace="TradeTopicSpace"/>
+	</jmsTopic>
+	<jmsActivationSpec id="io.openliberty.sample.daytrader8/DTBroker3MDB">
+		<properties.wasJms destinationRef="TradeBrokerQueue"/>
+	</jmsActivationSpec>
+	<jmsActivationSpec id="io.openliberty.sample.daytrader8/DTStreamer3MDB">
+		<properties.wasJms destinationRef="TradeStreamerTopic" destinationType="javax.jms.Topic"/>
+	</jmsActivationSpec>
 
-   <jmsTopic id="TradeStreamerTopic" jndiName="jms/TradeStreamerTopic">
-      <properties.wasJms deliveryMode="NonPersistent" topicSpace="TradeTopicSpace" />
-   </jmsTopic>
-
-   <jmsActivationSpec id="io.openliberty.sample.daytrader8/DTBroker3MDB">
-      <properties.wasJms destinationRef="TradeBrokerQueue" />
-   </jmsActivationSpec>
-
-   <jmsActivationSpec id="io.openliberty.sample.daytrader8/DTStreamer3MDB">
-      <properties.wasJms destinationRef="TradeStreamerTopic" destinationType="javax.jms.Topic" />
-   </jmsActivationSpec>
+	<executor
+			name="LargeThreadPool"
+			id="default"
+			coreThreads="${CORE_THREADS}"
+			maxThreads="${MAX_THREADS}"
+			keepAlive="60s"
+			stealPolicy="LOCAL"
+			rejectedWorkPolicy="CALLER_RUNS"/>
 </server>
