@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: daytrader-db
+  namespace: daytrader
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: daytrader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:10.5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "db_username"
+            - name: POSTGRES_PASSWORD
+              value: "db_password"
+            - name: POSTGRES_DB
+              value: "tradedb"
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

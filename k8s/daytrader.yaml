@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: daytrader-service
+  namespace: daytrader
+spec:
+  selector:
+    app: daytrader
+  ports:
+    - protocol: TCP
+      port: 9080
+      targetPort: 9080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: daytrader-config-app
+  namespace: daytrader
+data:
+  HTTP_MAX_KEEP_ALIVE_REQUESTS: "100"
+  HTTP_PERSIST_TIMEOUT: "30"
+  HTTP_READ_TIMEOUT: "60"
+  HTTP_WRITE_TIMEOUT: "60"
+  CONMGR1_TIMEOUT: "30"
+  CONMGR1_AGED_TIMEOUT: "280"
+  CONMGR1_MAX_IDLE_TIMEOUT: "270"
+  CONMGR1_REAP_TIME: "180"
+  CONMGR1_MAX_POOL_SIZE: "10"
+  CONMGR1_MIN_POOL_SIZE: "4"
+  CONMGR1_PURGE_POLICY: "FailingConnectionOnly"
+  CONMGR1_CONN_PER_THREAD: "1"
+  CONMGR3_TIMEOUT: "0"
+  CONMGR3_AGED_TIMEOUT: "0"
+  CONMGR3_MAX_IDLE_TIMEOUT: "1"
+  CONMGR3_REAP_TIME: "1"
+  CONMGR3_MAX_POOL_SIZE: "10"
+  CONMGR3_MIN_POOL_SIZE: "4"
+  CONMGR3_PURGE_POLICY: "FailingConnectionOnly"
+  CONMGR3_CONN_PER_THREAD: "1"
+  CONMGR4_TIMEOUT: "30"
+  CONMGR4_AGED_TIMEOUT: "280"
+  CONMGR4_MAX_IDLE_TIMEOUT: "270"
+  CONMGR4_REAP_TIME: "180"
+  CONMGR4_MAX_POOL_SIZE: "10"
+  CONMGR4_MIN_POOL_SIZE: "4"
+  CONMGR4_PURGE_POLICY: "FailingConnectionOnly"
+  CONMGR4_CONN_PER_THREAD: "1"
+  CORE_THREADS: "0"
+  MAX_THREADS: "10"
+  ORDER_PROCESSING_MODE: "0"
+  RUNTIME_MODE: "1"
+  WEB_INTERFACE: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: daytrader-config-jvm
+  namespace: daytrader
+data:
+  XMX: "512"
+  XMS: "8"
+  XMNX: "64"
+  CACHE_LIMIT: "32"
+  SCMX: "16"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: daytrader-service
+  namespace: daytrader
+spec:
+  selector:
+    matchLabels:
+      app: daytrader
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: "100%"
+      maxUnavailable: "0%"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: daytrader
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9080'
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: daytrader
+          image: smarttuning/daytrader8-pg
+          #image: smarttuning/daytrader8-db2   # update port to 50000
+          #image: smarttuning/daytrader8-derby # update port to 1527
+          #image: smarttuning/daytrader8-embd
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/bash", "-c", "sleep 90"]
+          ports:
+            - containerPort: 9080
+          env:
+            # replace placeholders with values in daytrader-config-jvm
+            # OPENJ9_JAVA_OPTIONS has higher priority than jvm.options
+            # OPENJ9_JAVA_OPTIONS is unique to OpenJ9 JVM; for other JVMs
+            # consider replace OPENJ9_JAVA_OPTIONS with JAVA_OPTS
+            - name: OPENJ9_JAVA_OPTIONS
+              value: "-XX:+UseContainerSupport -Xgcpolicy:gencon -Xtune:virtualized -Xms$(XMS)m -Xmx$(XMX)m -Xmnx$(XMNX)m -XX:SharedCacheHardLimit=$(CACHE_LIMIT)m -Xscmx$(SCMX)m"
+            - name: POSTGRES_HOST
+              value: daytrader-db.daytrader.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "tradedb"
+            - name: POSTGRES_USER
+              value: "db_username"
+            - name: POSTGRES_PASSWORD
+              value: "db2pass"
+            - name: MAX_QUOTES
+              value: "1000"
+            - name: MAX_USERS
+              value: "500"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: LOG_DIR
+              value: /home/$(POD_NAME)
+          # avoid to send requests if it already restarted
+          readinessProbe:
+            httpGet:
+              path: /daytrader
+              port: 9080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          startupProbe:
+            httpGet:
+              port: 9080
+              path: /daytrader
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          envFrom:
+            - configMapRef:
+                name: daytrader-config-app
+            - configMapRef:
+                name: daytrader-config-jvm
