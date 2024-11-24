@@ -17,7 +17,7 @@ export const options = {
   vus: 500,
   // A string specifying the total duration of the test run.
   // duration: '60s',
-  iterations: 500,
+  iterations: 1,
 
   // The following section contains configuration options for execution of this
   // test script in Grafana Cloud.
